@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, isValidSession } from "@/lib/auth";
 
+const PROTECTED_PAGE_PREFIXES = ["/checklist"];
+const PROTECTED_API_PREFIXES = ["/api/state", "/api/upload", "/api/download"];
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/api/login") {
+  const isProtectedPage = PROTECTED_PAGE_PREFIXES.some((p) => pathname.startsWith(p));
+  const isProtectedApi = PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p));
+
+  if (!isProtectedPage && !isProtectedApi) {
     return NextResponse.next();
   }
 
@@ -13,15 +19,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/")) {
+  if (isProtectedApi) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  if (pathname === "/login") {
-    return NextResponse.next();
-  }
-
-  return NextResponse.redirect(new URL("/login", request.url));
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("next", pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {

@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { HardHat, Lock } from "lucide-react";
+import { Suspense, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, HardHat, Lock } from "lucide-react";
+import Link from "next/link";
 
-export default function LoginPage() {
+const ALLOWED_NEXT_PATHS = ["/checklist"];
+
+function resolveNextPath(value: string | null): string {
+  if (value && ALLOWED_NEXT_PATHS.includes(value)) return value;
+  return "/checklist";
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = resolveNextPath(searchParams.get("next"));
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,7 +35,7 @@ export default function LoginPage() {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "ログインに失敗しました");
       }
-      router.replace("/");
+      router.replace(nextPath);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ログインに失敗しました");
@@ -68,7 +79,22 @@ export default function LoginPage() {
             {loading ? "確認中..." : "ログイン"}
           </button>
         </form>
+        <Link
+          href="/"
+          className="mt-5 flex items-center justify-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          ポータルトップへ戻る
+        </Link>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
