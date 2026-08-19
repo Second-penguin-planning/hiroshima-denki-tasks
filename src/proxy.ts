@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, isValidSession } from "@/lib/auth";
 
-const PROTECTED_PAGE_PREFIXES = ["/checklist"];
-const PROTECTED_API_PREFIXES = ["/api/state", "/api/upload", "/api/download"];
+const PROTECTED_PAGE_PREFIXES = ["/checklist", "/keiei-shinsa"];
+const PROTECTED_API_PREFIXES = [
+  "/api/state",
+  "/api/upload",
+  "/api/download",
+  "/api/keiei-shinsa",
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

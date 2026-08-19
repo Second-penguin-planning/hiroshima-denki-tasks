@@ -1,28 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { CHECKLIST_PHASES } from "@/lib/data";
 import { getAlertLevel, parseDateInput } from "@/lib/date-utils";
 import { getPhaseDeadline, computePhaseStats } from "@/lib/derive";
-import { useChecklistStore } from "@/lib/store";
+import type { ChecklistStore } from "@/lib/store";
+import type { ChecklistPhase } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { TaskCard } from "@/components/TaskCard";
 
-export function PhaseTabs() {
-  const [activePhaseId, setActivePhaseId] = useState(CHECKLIST_PHASES[0].id);
-  const targetStartDate = useChecklistStore((s) => s.targetStartDate);
-  const taskStatuses = useChecklistStore((s) => s.taskStatuses);
-  const setTaskStatus = useChecklistStore((s) => s.setTaskStatus);
+export function PhaseTabs({
+  phases,
+  store,
+  apiBase,
+}: {
+  phases: ChecklistPhase[];
+  store: ChecklistStore;
+  apiBase: string;
+}) {
+  const [activePhaseId, setActivePhaseId] = useState(phases[0].id);
+  const targetStartDate = store((s) => s.targetStartDate);
+  const taskStatuses = store((s) => s.taskStatuses);
+  const setTaskStatus = store((s) => s.setTaskStatus);
 
   const targetDate = parseDateInput(targetStartDate ?? "");
-  const activePhase =
-    CHECKLIST_PHASES.find((p) => p.id === activePhaseId) ?? CHECKLIST_PHASES[0];
+  const activePhase = phases.find((p) => p.id === activePhaseId) ?? phases[0];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {CHECKLIST_PHASES.map((phase) => {
+        {phases.map((phase) => {
           const phaseDeadline = targetDate ? getPhaseDeadline(phase, targetDate) : null;
           const hasOverdue = phase.tasks.some((task) => {
             const status = taskStatuses[task.id] ?? "not_started";
@@ -84,6 +91,8 @@ export function PhaseTabs() {
                 deadline={deadline}
                 status={taskStatuses[task.id] ?? "not_started"}
                 onStatusChange={(status) => setTaskStatus(task.id, status)}
+                store={store}
+                apiBase={apiBase}
               />
             );
           })}

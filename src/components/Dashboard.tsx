@@ -1,21 +1,35 @@
 "use client";
 
 import { CalendarDays, RotateCcw } from "lucide-react";
-import { CHECKLIST_PHASES } from "@/lib/data";
 import { daysBetween, formatDateJa, parseDateInput, toDateInputValue } from "@/lib/date-utils";
 import { computePhaseStats, computeStats, getPhaseWindow } from "@/lib/derive";
-import { useChecklistStore } from "@/lib/store";
+import type { ChecklistStore } from "@/lib/store";
+import type { ChecklistPhase } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 
-export function Dashboard() {
-  const targetStartDate = useChecklistStore((s) => s.targetStartDate);
-  const taskStatuses = useChecklistStore((s) => s.taskStatuses);
-  const setTargetStartDate = useChecklistStore((s) => s.setTargetStartDate);
+export function Dashboard({
+  phases,
+  store,
+  dateLabel,
+  dateDescription,
+  resetLabel,
+  resetConfirmMessage,
+}: {
+  phases: ChecklistPhase[];
+  store: ChecklistStore;
+  dateLabel: string;
+  dateDescription: string;
+  resetLabel: string;
+  resetConfirmMessage: string;
+}) {
+  const targetStartDate = store((s) => s.targetStartDate);
+  const taskStatuses = store((s) => s.taskStatuses);
+  const setTargetStartDate = store((s) => s.setTargetStartDate);
 
   const targetDate = parseDateInput(targetStartDate ?? "");
-  const stats = computeStats(taskStatuses);
+  const stats = computeStats(phases, taskStatuses);
   const today = new Date();
 
   return (
@@ -25,11 +39,9 @@ export function Dashboard() {
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800">
               <CalendarDays className="h-5 w-5 text-blue-600" />
-              就労開始目標日
+              {dateLabel}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              目標日を設定すると、各フェーズの期限が自動計算されます。
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{dateDescription}</p>
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -42,15 +54,15 @@ export function Dashboard() {
               <button
                 type="button"
                 onClick={() => {
-                  if (window.confirm("就労開始目標日をクリアしますか？（各タスクの進捗は変更されません）")) {
+                  if (window.confirm(resetConfirmMessage)) {
                     setTargetStartDate(null);
                   }
                 }}
-                title="就労開始目標日のみクリアします（タスクの進捗は保持されます）"
+                title={resetLabel}
                 className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-50 cursor-pointer"
               >
                 <RotateCcw className="h-4 w-4" />
-                目標日をクリア
+                {resetLabel}
               </button>
             )}
           </div>
@@ -58,7 +70,7 @@ export function Dashboard() {
 
         {targetDate && (
           <p className="mt-4 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">
-            就労開始目標日: {formatDateJa(targetDate)}
+            {dateLabel}: {formatDateJa(targetDate)}
           </p>
         )}
       </Card>
@@ -81,7 +93,7 @@ export function Dashboard() {
         <Card className="p-6">
           <h2 className="mb-4 text-lg font-bold text-slate-800">フェーズ別スケジュール</h2>
           <div className="space-y-3">
-            {CHECKLIST_PHASES.map((phase) => {
+            {phases.map((phase) => {
               const { start, end } = getPhaseWindow(phase, targetDate);
               const phaseStats = computePhaseStats(phase, taskStatuses);
               const isComplete = phaseStats.done === phaseStats.total;

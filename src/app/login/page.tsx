@@ -2,20 +2,33 @@
 
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, HardHat, Lock } from "lucide-react";
+import { ArrowLeft, Building2, HardHat, Lock, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
-const ALLOWED_NEXT_PATHS = ["/checklist"];
+const LOGIN_TARGETS: Record<string, { title: string; icon: LucideIcon }> = {
+  "/checklist": {
+    title: "建設分野「特定技能1号」認定申請＆受入準備チェックリスト",
+    icon: HardHat,
+  },
+  "/keiei-shinsa": {
+    title: "国土交通省 経営事項審査（競争入札参加のため）サポートチェックリスト",
+    icon: Building2,
+  },
+};
+
+const DEFAULT_NEXT_PATH = "/checklist";
 
 function resolveNextPath(value: string | null): string {
-  if (value && ALLOWED_NEXT_PATHS.includes(value)) return value;
-  return "/checklist";
+  if (value && value in LOGIN_TARGETS) return value;
+  return DEFAULT_NEXT_PATH;
 }
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = resolveNextPath(searchParams.get("next"));
+  const target = LOGIN_TARGETS[nextPath];
+  const TargetIcon = target.icon;
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +62,10 @@ function LoginForm() {
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white">
-            <HardHat className="h-6 w-6" />
+            <TargetIcon className="h-6 w-6" />
           </div>
           <p className="text-xs font-bold tracking-wide text-blue-600">広島電気興業 株式会社</p>
-          <h1 className="mt-1 text-lg font-bold text-slate-800">
-            建設分野「特定技能1号」認定申請＆受入準備チェックリスト
-          </h1>
+          <h1 className="mt-1 text-lg font-bold text-slate-800">{target.title}</h1>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">

@@ -1,8 +1,6 @@
 import { get, put } from "@vercel/blob";
 import type { TaskStatus, UploadedFile } from "./types";
 
-const STATE_PATHNAME = "state/checklist-state.json";
-
 export interface SharedState {
   targetStartDate: string | null;
   taskStatuses: Record<string, TaskStatus>;
@@ -23,9 +21,9 @@ const DEFAULT_STATE: SharedState = {
   updatedAt: new Date(0).toISOString(),
 };
 
-export async function readSharedState(): Promise<SharedState> {
+export async function readSharedState(statePathname: string): Promise<SharedState> {
   try {
-    const result = await get(STATE_PATHNAME, { access: "private", useCache: false });
+    const result = await get(statePathname, { access: "private", useCache: false });
     if (!result || result.statusCode !== 200) return DEFAULT_STATE;
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text) as Partial<SharedState>;
@@ -42,8 +40,8 @@ export async function readSharedState(): Promise<SharedState> {
   }
 }
 
-export async function writeSharedState(state: SharedState): Promise<void> {
-  await put(STATE_PATHNAME, JSON.stringify(state), {
+export async function writeSharedState(statePathname: string, state: SharedState): Promise<void> {
+  await put(statePathname, JSON.stringify(state), {
     access: "private",
     contentType: "application/json",
     allowOverwrite: true,

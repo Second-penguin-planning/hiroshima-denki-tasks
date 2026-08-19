@@ -16,7 +16,7 @@ import {
 import type { ChecklistTask, TaskStatus, UploadedFile } from "@/lib/types";
 import { formatDateJa, getAlertLevel, parseDateInput } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import { useChecklistStore } from "@/lib/store";
+import type { ChecklistStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusToggle } from "@/components/ui/status-toggle";
@@ -28,23 +28,27 @@ export function TaskCard({
   deadline,
   status,
   onStatusChange,
+  store,
+  apiBase,
 }: {
   task: ChecklistTask;
   deadline: Date | null;
   status: TaskStatus;
   onStatusChange: (status: TaskStatus) => void;
+  store: ChecklistStore;
+  apiBase: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const files = useChecklistStore((s) => s.taskFiles[task.id] ?? EMPTY_FILES);
-  const addTaskFile = useChecklistStore((s) => s.addTaskFile);
-  const removeTaskFile = useChecklistStore((s) => s.removeTaskFile);
+  const files = store((s) => s.taskFiles[task.id] ?? EMPTY_FILES);
+  const addTaskFile = store((s) => s.addTaskFile);
+  const removeTaskFile = store((s) => s.removeTaskFile);
 
-  const assigneeRemote = useChecklistStore((s) => s.taskAssignees[task.id] ?? "");
-  const setTaskAssignee = useChecklistStore((s) => s.setTaskAssignee);
+  const assigneeRemote = store((s) => s.taskAssignees[task.id] ?? "");
+  const setTaskAssignee = store((s) => s.setTaskAssignee);
   const [assigneeDraft, setAssigneeDraft] = useState(assigneeRemote);
   const [isEditingAssignee, setIsEditingAssignee] = useState(false);
 
@@ -52,8 +56,8 @@ export function TaskCard({
     if (!isEditingAssignee) setAssigneeDraft(assigneeRemote);
   }, [assigneeRemote, isEditingAssignee]);
 
-  const manualDeadlineStr = useChecklistStore((s) => s.taskDeadlines[task.id] ?? "");
-  const setTaskDeadline = useChecklistStore((s) => s.setTaskDeadline);
+  const manualDeadlineStr = store((s) => s.taskDeadlines[task.id] ?? "");
+  const setTaskDeadline = store((s) => s.setTaskDeadline);
 
   const manualDeadline = parseDateInput(manualDeadlineStr);
   const effectiveDeadline = manualDeadline ?? deadline;
@@ -83,7 +87,7 @@ export function TaskCard({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("taskId", task.id);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch(`${apiBase}/upload`, { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "アップロードに失敗しました");
@@ -101,7 +105,7 @@ export function TaskCard({
     if (!window.confirm("このファイルを削除しますか？")) return;
     removeTaskFile(task.id, pathname);
     try {
-      await fetch("/api/upload", {
+      await fetch(`${apiBase}/upload`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId: task.id, pathname }),
@@ -243,7 +247,7 @@ export function TaskCard({
                     className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm"
                   >
                     <a
-                      href={`/api/download?pathname=${encodeURIComponent(f.pathname)}&filename=${encodeURIComponent(f.filename)}`}
+                      href={`${apiBase}/download?pathname=${encodeURIComponent(f.pathname)}&filename=${encodeURIComponent(f.filename)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex min-w-0 flex-1 items-center gap-2 text-blue-700 hover:underline"

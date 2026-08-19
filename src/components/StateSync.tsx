@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useChecklistStore } from "@/lib/store";
+import type { ChecklistStore } from "@/lib/store";
 
 const POLL_INTERVAL_MS = 20_000;
 
-export function StateSync() {
-  const refresh = useChecklistStore((s) => s.refresh);
+export function StateSync({ store }: { store: ChecklistStore }) {
+  const refresh = store((s) => s.refresh);
 
   useEffect(() => {
     refresh();

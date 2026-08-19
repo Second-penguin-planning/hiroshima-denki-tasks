@@ -15,8 +15,8 @@ const SERVICES = [
     icon: Building2,
     agency: "国土交通省",
     title: "競争入札参加のための経営事項審査",
-    description: "経営事項審査の申請準備・管理機能です。",
-    available: false,
+    description: "経営状況分析から総合評定値の取得、入札参加資格申請までを一元管理します。",
+    available: true,
   },
   {
     href: "/josei-kin",

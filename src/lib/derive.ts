@@ -1,4 +1,3 @@
-import { CHECKLIST_PHASES, TOTAL_TASK_COUNT } from "./data";
 import { addMonths } from "./date-utils";
 import type { ChecklistPhase, TaskStatus } from "./types";
 
@@ -17,10 +16,11 @@ export function getPhaseDeadline(phase: ChecklistPhase, targetDate: Date): Date 
   return getPhaseWindow(phase, targetDate).end;
 }
 
-export function getPhaseForTask(taskId: string): ChecklistPhase | undefined {
-  return CHECKLIST_PHASES.find((phase) =>
-    phase.tasks.some((task) => task.id === taskId),
-  );
+export function getPhaseForTask(
+  phases: ChecklistPhase[],
+  taskId: string,
+): ChecklistPhase | undefined {
+  return phases.find((phase) => phase.tasks.some((task) => task.id === taskId));
 }
 
 export interface ChecklistStats {
@@ -32,20 +32,22 @@ export interface ChecklistStats {
 }
 
 export function computeStats(
+  phases: ChecklistPhase[],
   taskStatuses: Record<string, TaskStatus>,
 ): ChecklistStats {
+  let total = 0;
   let done = 0;
   let inProgress = 0;
 
-  for (const phase of CHECKLIST_PHASES) {
+  for (const phase of phases) {
     for (const task of phase.tasks) {
+      total += 1;
       const status = taskStatuses[task.id] ?? "not_started";
       if (status === "done") done += 1;
       else if (status === "in_progress") inProgress += 1;
     }
   }
 
-  const total = TOTAL_TASK_COUNT;
   const notStarted = total - done - inProgress;
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
 
