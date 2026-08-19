@@ -12,6 +12,7 @@ import {
   Loader2,
   User,
   CalendarClock,
+  StickyNote,
 } from "lucide-react";
 import type { ChecklistTask, TaskStatus, UploadedFile } from "@/lib/types";
 import { formatDateJa, getAlertLevel, parseDateInput } from "@/lib/date-utils";
@@ -59,6 +60,22 @@ export function TaskCard({
   const manualDeadlineStr = store((s) => s.taskDeadlines[task.id] ?? "");
   const setTaskDeadline = store((s) => s.setTaskDeadline);
 
+  const memoRemote = store((s) => s.taskMemos[task.id] ?? "");
+  const setTaskMemo = store((s) => s.setTaskMemo);
+  const [memoDraft, setMemoDraft] = useState(memoRemote);
+  const [isEditingMemo, setIsEditingMemo] = useState(false);
+  const memoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isEditingMemo) setMemoDraft(memoRemote);
+  }, [memoRemote, isEditingMemo]);
+
+  useEffect(() => {
+    return () => {
+      if (memoSaveTimer.current) clearTimeout(memoSaveTimer.current);
+    };
+  }, []);
+
   const manualDeadline = parseDateInput(manualDeadlineStr);
   const effectiveDeadline = manualDeadline ?? deadline;
   const alertLevel = getAlertLevel(effectiveDeadline, status === "done");
@@ -67,6 +84,25 @@ export function TaskCard({
     setIsEditingAssignee(false);
     if (assigneeDraft !== assigneeRemote) {
       setTaskAssignee(task.id, assigneeDraft);
+    }
+  }
+
+  function handleMemoChange(value: string) {
+    setMemoDraft(value);
+    if (memoSaveTimer.current) clearTimeout(memoSaveTimer.current);
+    memoSaveTimer.current = setTimeout(() => {
+      setTaskMemo(task.id, value);
+    }, 800);
+  }
+
+  function commitMemo() {
+    setIsEditingMemo(false);
+    if (memoSaveTimer.current) {
+      clearTimeout(memoSaveTimer.current);
+      memoSaveTimer.current = null;
+    }
+    if (memoDraft !== memoRemote) {
+      setTaskMemo(task.id, memoDraft);
     }
   }
 
@@ -232,6 +268,22 @@ export function TaskCard({
               </p>
             </div>
           )}
+
+          <div>
+            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+              <StickyNote className="h-4 w-4 text-emerald-600" />
+              メモ（自由記入）
+            </h4>
+            <textarea
+              value={memoDraft}
+              onFocus={() => setIsEditingMemo(true)}
+              onChange={(e) => handleMemoChange(e.target.value)}
+              onBlur={commitMemo}
+              placeholder="気づいた点や引き継ぎ事項などを自由に書き込めます（自動保存されます）"
+              rows={3}
+              className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
 
           <div>
             <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-700">

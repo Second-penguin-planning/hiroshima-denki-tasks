@@ -7,6 +7,7 @@ interface RemoteState {
   taskFiles: Record<string, UploadedFile[]>;
   taskAssignees: Record<string, string>;
   taskDeadlines: Record<string, string | null>;
+  taskMemos: Record<string, string>;
 }
 
 interface ChecklistState extends RemoteState {
@@ -17,6 +18,7 @@ interface ChecklistState extends RemoteState {
   setTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>;
   setTaskAssignee: (taskId: string, assignee: string) => Promise<void>;
   setTaskDeadline: (taskId: string, deadline: string | null) => Promise<void>;
+  setTaskMemo: (taskId: string, memo: string) => Promise<void>;
   addTaskFile: (taskId: string, file: UploadedFile) => void;
   removeTaskFile: (taskId: string, pathname: string) => void;
 }
@@ -28,6 +30,7 @@ function applyRemote(data: Partial<RemoteState>) {
     taskFiles: data.taskFiles ?? {},
     taskAssignees: data.taskAssignees ?? {},
     taskDeadlines: data.taskDeadlines ?? {},
+    taskMemos: data.taskMemos ?? {},
     isLoaded: true,
   };
 }
@@ -53,6 +56,7 @@ export function createChecklistStore(apiBase: string) {
     taskFiles: {},
     taskAssignees: {},
     taskDeadlines: {},
+    taskMemos: {},
     isLoaded: false,
     isSyncing: false,
 
@@ -110,6 +114,19 @@ export function createChecklistStore(apiBase: string) {
       }));
       try {
         const data = await postPatch({ type: "setTaskDeadline", taskId, deadline });
+        if (data) set(applyRemote(data));
+      } finally {
+        set({ isSyncing: false });
+      }
+    },
+
+    setTaskMemo: async (taskId, memo) => {
+      set((state) => ({
+        taskMemos: { ...state.taskMemos, [taskId]: memo },
+        isSyncing: true,
+      }));
+      try {
+        const data = await postPatch({ type: "setTaskMemo", taskId, memo });
         if (data) set(applyRemote(data));
       } finally {
         set({ isSyncing: false });

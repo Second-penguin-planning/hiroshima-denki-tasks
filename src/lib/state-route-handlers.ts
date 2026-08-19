@@ -6,7 +6,8 @@ type StatePatch =
   | { type: "setTargetDate"; targetStartDate: string | null }
   | { type: "setTaskStatus"; taskId: string; status: TaskStatus }
   | { type: "setTaskAssignee"; taskId: string; assignee: string }
-  | { type: "setTaskDeadline"; taskId: string; deadline: string | null };
+  | { type: "setTaskDeadline"; taskId: string; deadline: string | null }
+  | { type: "setTaskMemo"; taskId: string; memo: string };
 
 export function createStateRouteHandlers(statePathname: string) {
   async function GET() {
@@ -55,6 +56,16 @@ export function createStateRouteHandlers(statePathname: string) {
       const next = {
         ...current,
         taskDeadlines: { ...current.taskDeadlines, [patch.taskId]: patch.deadline },
+        updatedAt,
+      };
+      await writeSharedState(statePathname, next);
+      return NextResponse.json(next);
+    }
+
+    if (patch.type === "setTaskMemo" && typeof patch.taskId === "string") {
+      const next = {
+        ...current,
+        taskMemos: { ...current.taskMemos, [patch.taskId]: patch.memo },
         updatedAt,
       };
       await writeSharedState(statePathname, next);

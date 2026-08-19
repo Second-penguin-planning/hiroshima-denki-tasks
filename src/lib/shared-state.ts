@@ -9,6 +9,8 @@ export interface SharedState {
   taskAssignees: Record<string, string>;
   /** taskId -> 期限（YYYY-MM-DD）。未設定はnullまたはキーなし。 */
   taskDeadlines: Record<string, string | null>;
+  /** taskId -> 閲覧者が自由に書き込めるメモ */
+  taskMemos: Record<string, string>;
   updatedAt: string;
 }
 
@@ -18,6 +20,7 @@ const DEFAULT_STATE: SharedState = {
   taskFiles: {},
   taskAssignees: {},
   taskDeadlines: {},
+  taskMemos: {},
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -33,6 +36,7 @@ export async function readSharedState(statePathname: string): Promise<SharedStat
       taskFiles: parsed.taskFiles ?? {},
       taskAssignees: parsed.taskAssignees ?? {},
       taskDeadlines: parsed.taskDeadlines ?? {},
+      taskMemos: parsed.taskMemos ?? {},
       updatedAt: parsed.updatedAt ?? DEFAULT_STATE.updatedAt,
     };
   } catch {
