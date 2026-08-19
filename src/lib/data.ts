@@ -11,6 +11,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
     tasks: [
       {
         id: "p1-t1",
+        no: 1,
         title: "ハローワーク求人（国内人材確保の証明）",
         documents: [
           "ハローワーク求人申込書（控）の写し",
@@ -22,6 +23,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p1-t2",
+        no: 2,
         title: "CCUS事業者登録（受入企業の登録）",
         documents: [
           "建設業許可証の写し",
@@ -33,6 +35,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p1-t3",
+        no: 3,
         title: "受入事業実施法人への加入（全中連などを経由）",
         documents: [
           "加入申込書",
@@ -55,6 +58,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
     tasks: [
       {
         id: "p2-t1",
+        no: 4,
         title: "特定技能雇用契約の締結",
         documents: [
           "特定技能雇用契約書（写し）",
@@ -65,6 +69,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p2-t2",
+        no: 5,
         title: "外国人への重要事項説明",
         documents: ["雇用契約に係る重要事項事前説明書（写し）※母国語併記版"],
         notes:
@@ -72,6 +77,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p2-t3",
+        no: 6,
         title: "日本人との報酬比較・説明資料の作成",
         documents: [
           "同等報酬説明書",
@@ -93,6 +99,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
     tasks: [
       {
         id: "p3-t1",
+        no: 7,
         title: "オンラインシステム入力",
         documents: [
           "外国人就労管理システムのアカウント情報",
@@ -103,6 +110,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p3-t2",
+        no: 8,
         title: "受入企業側の添付資料",
         documents: [
           "登記事項証明書",
@@ -114,12 +122,14 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p3-t3",
+        no: 9,
         title: "外国人本人の添付資料",
         documents: ["技能検定の合格証書の写し", "日本語能力要件を証明する書類"],
         notes: "",
       },
       {
         id: "p3-t4",
+        no: 10,
         title: "契約・説明関係の添付資料",
         documents: [
           "特定技能雇用契約書・条件書",
@@ -130,6 +140,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p3-t5",
+        no: 11,
         title: "事前活動の証明資料",
         documents: [
           "ハローワーク求人票（控）の写し",
@@ -149,6 +160,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
     tasks: [
       {
         id: "p4-t1",
+        no: 12,
         title: "【超重要】国交省の認定証",
         documents: ["国土交通省が交付した「建設特定技能受入計画認定書」の写し"],
         notes:
@@ -156,6 +168,7 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
       },
       {
         id: "p4-t2",
+        no: 13,
         title: "入管向け申請書類一式",
         documents: [
           "在留資格認定証明書(COE)交付申請書または変更許可申請書",
@@ -177,12 +190,14 @@ export const CHECKLIST_PHASES: ChecklistPhase[] = [
     tasks: [
       {
         id: "p5-t1",
+        no: 14,
         title: "国土交通省への受入報告",
         documents: ["1号特定技能外国人受入報告書", "在留カードの写し"],
         notes: "就労開始後速やかにオンライン提出。",
       },
       {
         id: "p5-t2",
+        no: 15,
         title: "外国人本人のCCUS技能者登録",
         documents: ["外国人本人のCCUS技能者登録手続き", "CCUS技能者IDを明らかにする書類"],
         notes:

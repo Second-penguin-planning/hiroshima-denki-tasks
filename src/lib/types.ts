@@ -2,9 +2,18 @@ export type TaskStatus = "not_started" | "in_progress" | "done";
 
 export interface ChecklistTask {
   id: string;
+  /** 通しナンバー（1〜）。ミーティングやLINEでの参照用。 */
+  no: number;
   title: string;
   documents: string[];
   notes: string;
+}
+
+export interface UploadedFile {
+  pathname: string;
+  filename: string;
+  size: number;
+  uploadedAt: string;
 }
 
 export interface ChecklistPhase {

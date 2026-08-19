@@ -13,7 +13,6 @@ export function Dashboard() {
   const targetStartDate = useChecklistStore((s) => s.targetStartDate);
   const taskStatuses = useChecklistStore((s) => s.taskStatuses);
   const setTargetStartDate = useChecklistStore((s) => s.setTargetStartDate);
-  const resetAll = useChecklistStore((s) => s.resetAll);
 
   const targetDate = parseDateInput(targetStartDate ?? "");
   const stats = computeStats(taskStatuses);
@@ -42,12 +41,16 @@ export function Dashboard() {
             {targetStartDate && (
               <button
                 type="button"
-                onClick={resetAll}
-                title="目標日とすべての進捗をリセット"
+                onClick={() => {
+                  if (window.confirm("就労開始目標日をクリアしますか？（各タスクの進捗は変更されません）")) {
+                    setTargetStartDate(null);
+                  }
+                }}
+                title="就労開始目標日のみクリアします（タスクの進捗は保持されます）"
                 className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-50 cursor-pointer"
               >
                 <RotateCcw className="h-4 w-4" />
-                リセット
+                目標日をクリア
               </button>
             )}
           </div>

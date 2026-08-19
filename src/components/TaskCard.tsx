@@ -1,13 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, FileText, Info, AlertTriangle, Clock3 } from "lucide-react";
+import { useRef, useState, type ChangeEvent } from "react";
+import {
+  ChevronDown,
+  FileText,
+  Info,
+  AlertTriangle,
+  Clock3,
+  Upload,
+  Trash2,
+  Loader2,
+} from "lucide-react";
 import type { ChecklistTask, TaskStatus } from "@/lib/types";
 import { formatDateJa, getAlertLevel } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
+import { useChecklistStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusToggle } from "@/components/ui/status-toggle";
+import type { UploadedFile } from "@/lib/types";
+
+const EMPTY_FILES: UploadedFile[] = [];
 
 export function TaskCard({
   task,
@@ -21,7 +34,60 @@ export function TaskCard({
   onStatusChange: (status: TaskStatus) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const files = useChecklistStore((s) => s.taskFiles[task.id] ?? EMPTY_FILES);
+  const addTaskFile = useChecklistStore((s) => s.addTaskFile);
+  const removeTaskFile = useChecklistStore((s) => s.removeTaskFile);
+
   const alertLevel = getAlertLevel(deadline, status === "done");
+
+  async function handleFileSelected(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      setUploadError("PDFファイルのみアップロードできます");
+      return;
+    }
+
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("taskId", task.id);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "アップロードに失敗しました");
+      }
+      const data = await res.json();
+      if (data.file) addTaskFile(task.id, data.file);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "アップロードに失敗しました");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDelete(pathname: string) {
+    if (!window.confirm("このファイルを削除しますか？")) return;
+    removeTaskFile(task.id, pathname);
+    try {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: task.id, pathname }),
+      });
+    } catch {
+      // 削除リクエスト失敗時は次回の同期ポーリングで状態が復元される
+    }
+  }
 
   return (
     <Card
@@ -35,11 +101,14 @@ export function TaskCard({
         <button
           type="button"
           onClick={() => setIsOpen((v) => !v)}
-          className="flex flex-1 items-start gap-2 text-left cursor-pointer"
+          className="flex flex-1 items-start gap-3 text-left cursor-pointer"
         >
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+            {task.no}
+          </span>
           <ChevronDown
             className={cn(
-              "mt-1 h-5 w-5 shrink-0 text-slate-400 transition-transform",
+              "mt-1.5 h-5 w-5 shrink-0 text-slate-400 transition-transform",
               isOpen && "rotate-180",
             )}
           />
@@ -62,6 +131,12 @@ export function TaskCard({
                 <Badge tone="warning">
                   <AlertTriangle className="h-3 w-3" />
                   期限間近
+                </Badge>
+              )}
+              {files.length > 0 && (
+                <Badge tone="info">
+                  <FileText className="h-3 w-3" />
+                  資料 {files.length}件
                 </Badge>
               )}
             </div>
@@ -103,6 +178,64 @@ export function TaskCard({
               </p>
             </div>
           )}
+
+          <div>
+            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+              <Upload className="h-4 w-4 text-blue-600" />
+              関連資料（PDF）
+            </h4>
+
+            {files.length > 0 && (
+              <ul className="mb-2 space-y-1.5">
+                {files.map((f) => (
+                  <li
+                    key={f.pathname}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm"
+                  >
+                    <a
+                      href={`/api/download?pathname=${encodeURIComponent(f.pathname)}&filename=${encodeURIComponent(f.filename)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex min-w-0 flex-1 items-center gap-2 text-blue-700 hover:underline"
+                    >
+                      <FileText className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{f.filename}</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(f.pathname)}
+                      title="削除"
+                      className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-700 disabled:opacity-50 cursor-pointer"
+            >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {uploading ? "アップロード中..." : "PDFをアップロード"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleFileSelected}
+            />
+            {uploadError && <p className="mt-1.5 text-xs text-red-600">{uploadError}</p>}
+          </div>
         </div>
       )}
     </Card>
