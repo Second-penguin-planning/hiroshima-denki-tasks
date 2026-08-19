@@ -6,7 +6,9 @@ export const dynamic = "force-dynamic";
 
 type StatePatch =
   | { type: "setTargetDate"; targetStartDate: string | null }
-  | { type: "setTaskStatus"; taskId: string; status: TaskStatus };
+  | { type: "setTaskStatus"; taskId: string; status: TaskStatus }
+  | { type: "setTaskAssignee"; taskId: string; assignee: string }
+  | { type: "setTaskDeadline"; taskId: string; deadline: string | null };
 
 export async function GET() {
   const state = await readSharedState();
@@ -34,6 +36,26 @@ export async function POST(request: Request) {
     const next = {
       ...current,
       taskStatuses: { ...current.taskStatuses, [patch.taskId]: patch.status },
+      updatedAt,
+    };
+    await writeSharedState(next);
+    return NextResponse.json(next);
+  }
+
+  if (patch.type === "setTaskAssignee" && typeof patch.taskId === "string") {
+    const next = {
+      ...current,
+      taskAssignees: { ...current.taskAssignees, [patch.taskId]: patch.assignee },
+      updatedAt,
+    };
+    await writeSharedState(next);
+    return NextResponse.json(next);
+  }
+
+  if (patch.type === "setTaskDeadline" && typeof patch.taskId === "string") {
+    const next = {
+      ...current,
+      taskDeadlines: { ...current.taskDeadlines, [patch.taskId]: patch.deadline },
       updatedAt,
     };
     await writeSharedState(next);
